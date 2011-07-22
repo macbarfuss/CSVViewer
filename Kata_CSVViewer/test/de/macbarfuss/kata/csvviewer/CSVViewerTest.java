@@ -2,8 +2,7 @@ package de.macbarfuss.kata.csvviewer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import junit.framework.Assert;
 
@@ -47,11 +46,11 @@ public class CSVViewerTest {
     @Test
     public void startWithOneArgument() {
         CSVViewer.startWithFileArgument(TEST_FILE_NAME);
-        String expected = "Name |Age|City    |" + LINE_SEPARATOR
-                + "-----+---+--------+" + LINE_SEPARATOR
-                + "Peter|42 |New York|" + LINE_SEPARATOR
-                + "Paul |57 |London  |" + LINE_SEPARATOR
-                + "Mary |35 |Munich  |" + LINE_SEPARATOR
+        String expected = "Name     |Age|City    |" + LINE_SEPARATOR
+                + "---------+---+--------+" + LINE_SEPARATOR
+                + "Peter    |42 |New York|" + LINE_SEPARATOR
+                + "Paul     |57 |London  |" + LINE_SEPARATOR
+                + "Mary     |35 |Munich  |" + LINE_SEPARATOR
                 + "" + LINE_SEPARATOR
                 + "N(ext page, P(revious page, F(irst page, L(ast page, eX(it"
                 + LINE_SEPARATOR;
@@ -64,12 +63,12 @@ public class CSVViewerTest {
     public void testReadHeadersFromString() {
         CSVViewer csvv = new CSVViewer();
         csvv.readHeadersFromString("Name;Age;City");
-        List<String> expected = new ArrayList<String>();
-        expected.add("Name");
-        expected.add("Age");
-        expected.add("City");
+        String[] expected = new String[3];
+        expected[0] = "Name";
+        expected[1] = "Age";
+        expected[2] = "City";
         Assert.assertEquals("Headers not parsed correctly.",
-                expected,
-                csvv.getHeaders());
+                Arrays.toString(expected),
+                Arrays.toString(csvv.getHeaders()));
     }
 }

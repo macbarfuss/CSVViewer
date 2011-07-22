@@ -7,20 +7,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 public final class CSVViewer {
 
+    public static final String LINE_SEPARATOR =
+            System.getProperty("line.separator");
+
     public static void main(String[] args) {
         switch (args.length) {
-            case 1:
+            case 0:
                 startWithNoArgument();
                 break;
-            case 2:
-                startWithFileArgument(args[1]);
+            case 1:
+                startWithFileArgument(args[0]);
                 break;
-            case 3:
-                startWithFileAndSizeArgument(args[1], args[2]);
+            case 2:
+                startWithFileAndSizeArgument(args[0], args[1]);
             default:
         }
     }
@@ -29,7 +31,15 @@ public final class CSVViewer {
 
     private File file;
 
-    private final List<String> headers = new ArrayList<String>();
+    private String[] headers = new String[0];
+
+    private List<String[]> data = new ArrayList<String[]>();
+
+    private int[] columnWidth = new int[0];
+
+    private int pagelength = 3;
+
+    private int currentPage = 0;
 
     private BufferedReader filestream;
 
@@ -43,7 +53,7 @@ public final class CSVViewer {
     protected static void startWithFileArgument(String filename) {
         createInstance(filename);
         instance.readOutFile();
-        String page = instance.getFirstPage();
+        String page = instance.getPage(1);
         instance.printPageAndWaitForAnswer(page);
     }
 
@@ -65,11 +75,21 @@ public final class CSVViewer {
                 readHeadersFromString(line);
                 line = filestream.readLine();
                 while (line != null) {
-                    // TODO do something here
+                    data.add(line.split(";"));
                     line = filestream.readLine();
                 }
             }
             filestream.close();
+            for (int i = 0; i < headers.length; i++) {
+                columnWidth[i] = headers[i].length();
+            }
+            for (int j = 0; j < data.size(); j++) {
+                for (int i = 0; i < columnWidth.length; i++) {
+                    if (columnWidth[i] < data.get(j)[i].length()) {
+                        columnWidth[i] = data.get(j)[i].length();
+                    }
+                }
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -78,21 +98,68 @@ public final class CSVViewer {
     }
 
     protected void readHeadersFromString(String line) {
-        String[] result = line.split(";");
-        for (int x = 0; x < result.length; x++) {
-            headers.add(result[x]);
+        String[] tokens = line.split(";");
+        initFields(tokens.length);
+        for (int i = 0; i < tokens.length; i++) {
+            headers[i] = tokens[i];
         }
     }
 
-    private String getFirstPage() {
-        return null;
+    private void initFields(int length) {
+        headers = new String[length];
+        columnWidth = new int[length];
+        for (int i = 0; i < columnWidth.length; i++) {
+            columnWidth[i] = 0;
+        }
     }
 
-    protected List<String> getHeaders() {
+    private String getPage(int pagenum) {
+        StringBuffer result = new StringBuffer();
+        int linecount = data.size();
+        result.append(generateLine(headers));
+        result.append(generateHorizontalRule());
+        int firstline = (pagenum - 1) * pagelength;
+        for (
+                int i = firstline, j = 0;
+                i < linecount && j < pagelength;
+                i++, j++) {
+            result.append(generateLine(data.get(i)));
+        }
+        return result.toString();
+    }
+
+    private String generateHorizontalRule() {
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < columnWidth.length; i++) {
+            for (int j = 0; j < columnWidth[i]; j++) {
+                result.append("-");
+            }
+            result.append("+");
+        }
+        result.append(LINE_SEPARATOR);
+        return result.toString();
+    }
+
+    private String generateLine(String[] items) {
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < columnWidth.length; i++) {
+            result.append(items[i]);
+            int spaces = columnWidth[i] - items[i].length();
+            for (int j = 0; j < spaces; j++) {
+                result.append(" ");
+            }
+            result.append("|");
+        }
+        result.append(LINE_SEPARATOR);
+        return result.toString();
+    }
+
+    protected String[] getHeaders() {
         return headers;
     }
 
     private void printPageAndWaitForAnswer(String page) {
+        System.out.println(page);
     }
 
     protected static void startWithFileAndSizeArgument(
